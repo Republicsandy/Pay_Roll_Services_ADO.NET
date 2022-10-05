@@ -8,9 +8,7 @@ namespace Pay_Roll_Services_ADO
         {
             Console.WriteLine("Wellcome to Employee Payroll");
             EmployeeRepository repo = new EmployeeRepository();
-            EmployeeModel model = new EmployeeModel();
-            model.Name = "Sandeep singh";
-            repo.RetrieveDataBasedOnName(model);
+            repo.GetAllEmployee();
         }
     }
 }
