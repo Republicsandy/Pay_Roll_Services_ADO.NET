@@ -64,7 +64,6 @@ namespace Pay_Roll_Services_ADO
                 sqlConnection.Close();
             }
         }
-
         public string UpdateEmployee(EmployeePayRoll employeeModel)
         {
             string change = "Not success";
@@ -73,7 +72,7 @@ namespace Pay_Roll_Services_ADO
                 using (sqlConnection)
                 {
                     //Open command with spUpdateEmployeeDetails 
-                    string query = @"update employee_payroll set BasicPay = '300000' where EmployeeId = '3' and EmployeeName = 'Priya'";
+                    string query = @"update employee_payroll set BasicPay = '300000' where EmployeeId = '3' and EmployeeName = 'Sandeep'";
                     SqlCommand command = new SqlCommand(query, this.sqlConnection);
                     //open connection
                     sqlConnection.Open();
@@ -81,9 +80,42 @@ namespace Pay_Roll_Services_ADO
                     int result = command.ExecuteNonQuery();
                     if (result != 0)
                         change = "success";
-
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                //closes the connection
+                sqlConnection.Close();
+            }
+            return change;
+        }
 
+        public string UpdateEmployeeUsingStoredProcedure(EmployeePayRoll employeeModel)
+        {
+            string change = "Unsuccessful";
+            try
+            {
+                using (sqlConnection)
+                {
+                    //spUdpateEmployeeDetails is stored procedure
+                    SqlCommand sqlCommand = new SqlCommand("spUdpateEmployeeDetails", this.sqlConnection);
+                    //setting command type as stored procedure
+                    sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                    //sending params 
+                    sqlCommand.Parameters.AddWithValue("@name", employeeModel.Name);
+                    sqlCommand.Parameters.AddWithValue("@Basic_Pay", employeeModel.BasicPay);
+                    sqlCommand.Parameters.AddWithValue("@id", employeeModel.EmployeeId);
+                    sqlConnection.Open();
+                    //returns the number of rows updated
+                    int result = sqlCommand.ExecuteNonQuery();
+                    if (result != 0)
+                        change = "Updated";
+                    //close reader
+                }
             }
             catch (Exception ex)
             {
@@ -96,8 +128,55 @@ namespace Pay_Roll_Services_ADO
 
             }
             return change;
-
-
+        }
+        public EmployeePayRoll RetrieveDataBasedOnName(EmployeePayRoll employeeModel)
+        {
+            try
+            {
+                using (this.sqlConnection)
+                {
+                    //spRetrieveDataBasedOnName is the stored procedure
+                    SqlCommand sqlCommand = new SqlCommand("spRetrieveDataBasedOnName", this.sqlConnection);
+                    sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                    //Sends params to procedure
+                    sqlCommand.Parameters.AddWithValue("@name", employeeModel.Name);
+                    sqlConnection.Open();
+                    SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+                    if (sqlDataReader.HasRows)
+                    {
+                        while (sqlDataReader.Read())
+                        {
+                            employeeModel.EmployeeId = sqlDataReader.GetInt32(0);
+                            employeeModel.Name = sqlDataReader.GetString(1);
+                            employeeModel.BasicPay = sqlDataReader.GetDouble(2);
+                            employeeModel.StartDate = sqlDataReader.GetDateTime(3);
+                            employeeModel.Gender = sqlDataReader.GetString(4);
+                            employeeModel.Phone = sqlDataReader.GetInt32(5);
+                            employeeModel.Department = sqlDataReader.GetString(6);
+                            employeeModel.Address = sqlDataReader.GetString(7);
+                            employeeModel.Deductions = sqlDataReader.GetDouble(8);
+                            employeeModel.TaxblePay = sqlDataReader.GetDouble(9);
+                            employeeModel.IncomeTax = sqlDataReader.GetDouble(10);
+                            employeeModel.NetPay = sqlDataReader.GetDouble(11);
+                        }
+                    }
+                    else
+                    {
+                        //if no result present
+                        return null;
+                    }
+                }
+            }
+            //catch 
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                sqlConnection.Close();
+            }
+            return employeeModel;
         }
     }
 }
